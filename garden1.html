@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Typing Garden — 1st Grade</title>
+  <style>
+    :root{
+      --bg: #f5fbff;
+      --sky: linear-gradient(#b3e5ff,#e6f7ff 60%, #f9ffe6);
+      --grass: #c8f5a7;
+      --soil: #8b5e3c;
+      --text: #0f172a;
+      --accent: #6d28d9;
+      --good: #10b981;
+      --bad: #ef4444;
+      --card: #ffffff;
+      --shadow: 0 10px 20px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;}
+    body{
+      margin:0; font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--text); background:var(--bg);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .app{width:min(1100px, 96vw);}
+    .card{
+      background:var(--card); border-radius:24px; box-shadow:var(--shadow); overflow:hidden;
+    }
+    header{
+      padding:20px 24px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+      background: conic-gradient(from 220deg at 30% 20%, #ffe3e3, #fff5cc, #e0ffe0, #dff3ff, #f0e6ff, #ffe3e3);
+    }
+    header h1{margin:0; font-size:clamp(20px, 3vw, 32px);}
+    header .counter{font-weight:700; background:#fff; padding:8px 12px; border-radius:999px;}
+    .screen{padding:24px;}
+
+    /* Start screen */
+    .start{
+      display:grid; grid-template-columns: 1.2fr .8fr; gap:24px; align-items:center;
+    }
+    .start .scene{
+      height:360px; border-radius:18px; overflow:hidden; position:relative; box-shadow:var(--shadow);
+      background: var(--sky);
+    }
+    .ground{position:absolute; left:0; right:0; bottom:0; height:120px; background:linear-gradient(#b8e986, var(--grass));}
+    .soil-strip{position:absolute; left:0; right:0; bottom:0; height:28px; background:var(--soil);}    
+    .start .content{padding:8px 8px;}
+    .btn{
+      border:0; background:linear-gradient(135deg, #7c3aed, #06b6d4); color:#fff; font-weight:800; letter-spacing:.3px;
+      padding:14px 20px; border-radius:16px; cursor:pointer; box-shadow:0 8px 20px rgba(0,0,0,.12); transition: transform .08s ease;
+    }
+    .btn:active{transform:translateY(2px)}
+    .btn.secondary{background:#fff; color:#111827; border:2px solid #e5e7eb}
+
+    /* Game area */
+    .game{
+      display:grid; grid-template-columns: 1fr 1.1fr; gap:24px;
+    }
+    .garden{
+      min-height:420px; border-radius:18px; overflow:hidden; position:relative; box-shadow:var(--shadow);
+      background: var(--sky);
+    }
+    .hud{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+    .progress{height:12px; background:#e5e7eb; border-radius:12px; overflow:hidden; width:100%}
+    .progress > div{height:100%; width:0%; background:linear-gradient(90deg,#22c55e,#16a34a); transition:width .4s ease}
+
+    .word-card{
+      background:#fff; border-radius:18px; padding:18px; box-shadow:var(--shadow);
+    }
+    .target{
+      display:flex; gap:6px; justify-content:center; font-weight:800; letter-spacing:.5px; font-size:clamp(26px,4.4vw,44px);
+    }
+    .letter{display:inline-block; padding:4px 2px; border-radius:6px;}
+    .letter.correct{color:#10b981}
+    .letter.pending{color:#111827; border-bottom:4px solid #fde68a}
+    .letter.wrong{color:#ef4444}
+
+    .input-area{margin-top:14px; display:flex; gap:10px; align-items:center; justify-content:center}
+    input[type="text"]{
+      font-size:clamp(18px, 2.6vw, 28px); padding:12px 14px; border-radius:12px; border:2px solid #e5e7eb; outline:none; width:min(420px, 80%);
+    }
+    input[type="text"].bad{border-color:var(--bad); animation:shake .2s linear 0s 2}
+
+    @keyframes shake{0%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}100%{transform:translateX(0)}}
+
+    .pill{font-size:14px; background:#f1f5f9; padding:6px 10px; border-radius:999px;}
+
+    .legend{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+    .legend .pill{display:flex; align-items:center; gap:6px}
+
+    .sprite{position:absolute; font-size: clamp(26px, 4vw, 40px); user-select:none; pointer-events:none;}
+    .float{animation: float 5s ease-in-out infinite}
+    @keyframes float{0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+
+    .celebrate{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.1);}
+    .celebrate.show{display:flex}
+    .celebrate .modal{background:#fff; border-radius:20px; padding:28px; text-align:center; box-shadow:var(--shadow)}
+    .celebrate h2{margin:0 0 8px 0; font-size:clamp(22px,3vw,32px)}
+
+    /* Confetti pieces */
+    .confetti{position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; overflow:hidden}
+    .piece{position:absolute; width:10px; height:16px; will-change: transform, opacity;}
+
+    @media (max-width: 860px){
+      .start{grid-template-columns:1fr}
+      .game{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="app card" id="app">
+    <header>
+      <h1>🌼 Typing Garden</h1>
+      <div class="counter" id="count">0 / 12 words</div>
+    </header>
+
+    <div class="screen start" id="startScreen">
+      <div class="scene">
+        <div id="startSprites"></div>
+        <div class="ground"></div>
+        <div class="soil-strip"></div>
+      </div>
+      <div class="content">
+        <h2 style="margin:0 0 6px 0">Grow a garden by typing words!</h2>
+        <p style="margin:0 0 14px 0">Type the word you see. Each correct word adds a new friend or plant to your garden. Finish all 12 to celebrate! 🎉</p>
+        <div class="legend">
+          <div class="pill">🐝 bee</div>
+          <div class="pill">🐜 ant</div>
+          <div class="pill">🐞 bug</div>
+          <div class="pill">🌸 flower</div>
+          <div class="pill">🌽 corn</div>
+          <div class="pill">🌺 petal</div>
+          <div class="pill">🌱 seed</div>
+          <div class="pill">💦 water</div>
+          <div class="pill">🪨 rocks</div>
+          <div class="pill">🌈 colors</div>
+          <div class="pill">🍃 leaf</div>
+          <div class="pill">🟫 soil</div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:16px">
+          <button class="btn" id="playBtn">Play</button>
+          <button class="btn secondary" id="practiceBtn">Practice a word</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen game" id="gameScreen" style="display:none">
+      <div class="garden" id="garden">
+        <div class="ground"></div>
+        <div class="soil-strip"></div>
+      </div>
+      <div>
+        <div class="hud">
+          <div class="pill" id="progressPill">Keep going! 🌱</div>
+          <div class="progress"><div id="bar"></div></div>
+        </div>
+        <div class="word-card" style="margin-top:14px">
+          <div class="target" id="target"></div>
+          <div class="input-area">
+            <input id="entry" type="text" placeholder="Type the word here" autocomplete="off" spellcheck="false" />
+            <button class="btn" id="skipBtn" title="New word">↻ New</button>
+          </div>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn secondary" id="backBtn">⟵ Back</button>
+          <button class="btn secondary" id="restartBtn">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="confetti" id="confetti"></div>
+
+  <div class="celebrate" id="celebrate">
+    <div class="modal">
+      <h2>Great typing! You grew a beautiful garden! 🌈🌸🐞</h2>
+      <p style="margin:0 0 14px 0">Want to play again?</p>
+      <button class="btn" id="againBtn">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    // Game words
+    const WORDS = [
+      "bee", "ant", "bug", "flower", "corn", "petal", "seed", "water", "rocks", "colors", "leaf", "soil"
+    ];
+
+    // Emoji sprites mapped to each word
+    const SPRITES = {
+      bee: "🐝", ant: "🐜", bug: "🐞", flower: "🌸", corn: "🌽", petal: "🌺",
+      seed: "🌱", water: "💦", rocks: "🪨", colors: "🌈", leaf: "🍃", soil: "🟫"
+    };
+
+    const state = {
+      used: new Set(),
+      current: "",
+      wins: 0,
+      practice: false
+    };
+
+    const $ = s => document.querySelector(s);
+    const app = $('#app');
+    const startScreen = $('#startScreen');
+    const gameScreen = $('#gameScreen');
+    const garden = $('#garden');
+    const target = $('#target');
+    const entry = $('#entry');
+    const bar = $('#bar');
+    const count = $('#count');
+    const progressPill = $('#progressPill');
+    const confettiBox = $('#confetti');
+
+    // Utility: random integer in [min, max]
+    const R = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+    function pickWord(){
+      const pool = WORDS.filter(w => !state.used.has(w));
+      if(pool.length === 0) return null;
+      return pool[Math.floor(Math.random()*pool.length)];
+    }
+
+    function setWord(w){
+      state.current = w;
+      target.innerHTML = '';
+      for(const ch of w){
+        const span = document.createElement('span');
+        span.className = 'letter pending';
+        span.textContent = ch;
+        target.appendChild(span);
+      }
+      entry.value = '';
+      entry.classList.remove('bad');
+      entry.focus();
+    }
+
+    function updateLetters(){
+      const typed = entry.value;
+      const letters = [...target.children];
+      let allCorrect = true;
+      for(let i=0;i<letters.length;i++){
+        const el = letters[i];
+        const t = typed[i];
+        const goal = state.current[i];
+        if(t == null){
+          el.className = 'letter pending';
+          allCorrect = false;
+        } else if(t === goal){
+          el.className = 'letter correct';
+        } else {
+          el.className = 'letter wrong';
+          allCorrect = false;
+        }
+      }
+      return allCorrect && typed.length === state.current.length;
+    }
+
+    function addSprite(word){
+      const em = SPRITES[word] || '✨';
+      const node = document.createElement('div');
+      node.className = 'sprite float';
+      node.textContent = em;
+      // Place randomly in the sky/ground region
+      const pad = 18;
+      const gRect = garden.getBoundingClientRect();
+      const x = R(pad, Math.max(pad, gRect.width - pad*3));
+      const y = R(40, Math.max(80, gRect.height - 140));
+      node.style.left = x + 'px';
+      node.style.top = y + 'px';
+      garden.appendChild(node);
+
+      // small pop animation
+      node.animate([
+        { transform:'scale(.6)', opacity:0 },
+        { transform:'scale(1.2)', opacity:1, offset:.6 },
+        { transform:'scale(1)', opacity:1 }
+      ], { duration: 420, easing:'ease-out' });
+    }
+
+    // Lightweight confetti — DOM based
+    function burstConfetti(amount=80, speed=1){
+      const colors = ['#fde047','#60a5fa','#f472b6','#34d399','#fca5a5','#c084fc','#fb923c'];
+      const { innerWidth:W, innerHeight:H } = window;
+      for(let i=0;i<amount;i++){
+        const p = document.createElement('div');
+        p.className = 'piece';
+        p.style.background = colors[R(0, colors.length-1)];
+        p.style.left = R(0, W) + 'px';
+        p.style.top = '-20px';
+        p.style.transform = `rotate(${R(0,360)}deg)`;
+        const fall = (H + R(60, 200)) / speed;
+        const drift = R(-120, 120);
+        const rotate = R(180, 1080);
+        p.animate([
+          { transform:`translate(0,0) rotate(0deg)`, opacity:1 },
+          { transform:`translate(${drift}px, ${fall}px) rotate(${rotate}deg)`, opacity: R(6,10)/10 }
+        ], { duration: R(1600, 2600) / (0.6 + speed*0.4), easing:'cubic-bezier(.2,.6,.2,1)', fill:'forwards' });
+        confettiBox.appendChild(p);
+        setTimeout(()=>p.remove(), 2800);
+      }
+    }
+
+    function updateProgress(){
+      const pct = Math.round((state.wins / WORDS.length) * 100);
+      bar.style.width = pct + '%';
+      count.textContent = `${state.wins} / ${WORDS.length} words`;
+      if(state.wins === 0) progressPill.textContent = 'Keep going! 🌱';
+      else if(state.wins < 6) progressPill.textContent = 'Nice! Things are growing 🌿';
+      else if(state.wins < 11) progressPill.textContent = 'Beautiful garden! 🌸';
+      else progressPill.textContent = 'Almost there! 🌈';
+    }
+
+    function nextWord(){
+      const w = pickWord();
+      if(!w){
+        finish();
+        return;
+      }
+      state.used.add(w);
+      setWord(w);
+      updateProgress();
+    }
+
+    function check(){
+      const correct = updateLetters();
+      if(correct){
+        addSprite(state.current);
+        state.wins++;
+        updateProgress();
+        burstConfetti(36, 1.1);
+        // Short pause then next
+        setTimeout(nextWord, 450);
+      } else {
+        entry.classList.add('bad');
+        setTimeout(()=> entry.classList.remove('bad'), 200);
+      }
+    }
+
+    function finish(){
+      // Big rainbow/celebration
+      addSprite('colors');
+      burstConfetti(220, 1.8); // faster & more confetti
+      $('#celebrate').classList.add('show');
+    }
+
+    function resetGame(){
+      state.used = new Set();
+      state.wins = 0;
+      state.practice = false;
+      garden.querySelectorAll('.sprite').forEach(n=>n.remove());
+      updateProgress();
+      setWord(pickWord());
+    }
+
+    // Practice mode lets student pick any word to try freely
+    function practiceMode(){
+      state.practice = true;
+      state.used = new Set();
+      state.wins = 0;
+      updateProgress();
+      garden.querySelectorAll('.sprite').forEach(n=>n.remove());
+      // Show first word, but allow skip to choose others
+      setWord(WORDS[0]);
+    }
+
+    // Events
+    $('#playBtn').addEventListener('click', ()=>{
+      startScreen.style.display = 'none';
+      gameScreen.style.display = '';
+      resetGame();
+      entry.focus();
+    });
+
+    $('#practiceBtn').addEventListener('click', ()=>{
+      startScreen.style.display = 'none';
+      gameScreen.style.display = '';
+      practiceMode();
+      entry.focus();
+    });
+
+    $('#backBtn').addEventListener('click', ()=>{
+      gameScreen.style.display = 'none';
+      startScreen.style.display = '';
+      $('#celebrate').classList.remove('show');
+    });
+
+    $('#restartBtn').addEventListener('click', ()=>{
+      resetGame();
+      entry.focus();
+    });
+
+    $('#againBtn').addEventListener('click', ()=>{
+      $('#celebrate').classList.remove('show');
+      resetGame();
+      entry.focus();
+    });
+
+    $('#skipBtn').addEventListener('click', ()=>{
+      if(state.practice){
+        // cycle to a random word for practice
+        const w = WORDS[Math.floor(Math.random()*WORDS.length)];
+        setWord(w);
+      } else {
+        nextWord();
+      }
+    });
+
+    entry.addEventListener('input', ()=>{
+      // live feedback
+      updateLetters();
+    });
+
+    entry.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        if(entry.value.length === 0){ return; }
+        if(entry.value.toLowerCase() === state.current){
+          check();
+        } else {
+          entry.classList.add('bad');
+          burstConfetti(8, 0.6); // tiny sprinkle even on tries to keep it fun
+          setTimeout(()=> entry.classList.remove('bad'), 200);
+        }
+      }
+    });
+
+    // Cute ambient sprites on start screen
+    function seedStartSprites(){
+      const box = document.getElementById('startSprites');
+      const items = ['🐝','🐞','🪲','🦋','🌸','🌼','🍃','🌿'];
+      for(let i=0;i<14;i++){
+        const s = document.createElement('div');
+        s.className = 'sprite float';
+        s.textContent = items[R(0, items.length-1)];
+        s.style.left = R(10, 420) + 'px';
+        s.style.top = R(10, 250) + 'px';
+        box.appendChild(s);
+      }
+    }
+
+    seedStartSprites();
+  </script>
+</body>
+</html>
